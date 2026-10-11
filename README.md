@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/header.jpg" alt="Smart-Humas — WP-MCP untuk website humas pemerintah daerah" width="100%">
+</p>
+
 # Smart Humas — WP-MCP untuk website humas pemerintah daerah
 
 Claude sebagai **operator redaksi** website WordPress humas setda dan OPD, dengan hierarki tiga peran:
