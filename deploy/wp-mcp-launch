@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Dipanggil SSH lewat forced command di authorized_keys:
+#   command="/opt/wp-mcp/bin/wp-mcp-launch --actor admin1",restrict ssh-ed25519 AAAA...
+# Aktor ditentukan oleh kunci SSH, bukan oleh klien.
+#
+# Dua mode, dipilih dari perintah yang dikirim klien (SSH_ORIGINAL_COMMAND):
+#   (kosong)             → server MCP lewat stdio (dipakai Claude Code)
+#   upload <nama-berkas> → simpan stdin ke kotak masuk media aktor, cetak path-nya
+#                          contoh: ssh wpmcp@host "upload rapat-01.jpg" < rapat-01.jpg
+set -euo pipefail
+ACTOR=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --actor) ACTOR="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+[[ "$ACTOR" =~ ^[A-Za-z0-9._-]{1,64}$ ]] || { echo "aktor tidak sah" >&2; exit 2; }
+export WPMCP_CONFIG_DIR=/etc/wp-mcp
+umask 027
+
+INBOX_ROOT="${WPMCP_INBOX:-/var/lib/wp-mcp/inbox}"
+MAX_BYTES=$((20 * 1024 * 1024))
+CMD="${SSH_ORIGINAL_COMMAND:-}"
+
+if [[ "$CMD" =~ ^upload[[:space:]]+([A-Za-z0-9._-]{1,100})$ ]]; then
+  NAME="${BASH_REMATCH[1]}"
+  [[ "$NAME" == .* ]] && { echo "nama berkas tidak sah" >&2; exit 2; }
+  DIR="$INBOX_ROOT/$ACTOR"
+  mkdir -p "$DIR"
+  find "$DIR" -type f -mmin +1440 -delete 2>/dev/null || true   # kotak masuk dibersihkan setelah 1 hari
+  DEST="$DIR/$(date +%s)-$NAME"
+  head -c "$((MAX_BYTES + 1))" > "$DEST"
+  if [[ $(stat -c %s "$DEST") -gt $MAX_BYTES ]]; then
+    rm -f "$DEST"; echo "berkas melebihi 20 MB" >&2; exit 3
+  fi
+  echo "$DEST"
+  exit 0
+fi
+
+if [[ -n "$CMD" ]]; then
+  echo "perintah tidak dikenal; hanya MCP stdio atau 'upload <nama>'" >&2
+  exit 2
+fi
+
+exec /opt/wp-mcp/venv/bin/wp-mcp serve --actor "$ACTOR" --door claude_code

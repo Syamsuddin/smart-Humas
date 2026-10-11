@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "ask": [
+      "mcp__plugin_wp-mcp-opd_wp-mcp__confirm_action",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__submit_to_leader",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__return_to_admin",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__approve_and_publish",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__publish_correction",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__unpublish_post",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__trash_post",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__send_reply",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__approve_comment",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__flush_cache",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__grant_delegation",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__revoke_delegation",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__directory_import",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__directory_set",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__directory_retire_person",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__memory_confirm",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__memory_set",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__memory_forget"
+    ],
+    "allow": [
+      "mcp__plugin_wp-mcp-opd_wp-mcp__get_editorial_context",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__verify_names",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__directory_status",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__directory_lookup",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__memory_lookup",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__list_posts",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__get_post",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__list_queue",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__list_terms",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__list_comments",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__list_media",
+      "mcp__plugin_wp-mcp-opd_wp-mcp__list_pending_actions"
+    ]
+  }
+}

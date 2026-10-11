@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "wp-mcp": {
+      "command": "ssh",
+      "args": [
+        "-T",
+        "-o", "BatchMode=yes",
+        "-o", "ServerAliveInterval=30",
+        "-o", "ServerAliveCountMax=4",
+        "${WPMCP_SSH_TARGET}"
+      ]
+    }
+  }
+}

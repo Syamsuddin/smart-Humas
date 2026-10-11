@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+# rahasia dan data runtime tidak pernah masuk repo
+secrets.env
+*.db
+audit.jsonl
+.claude/settings.local.json
+*.whl

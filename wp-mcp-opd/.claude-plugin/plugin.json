@@ -1,0 +1,12 @@
+{
+  "name": "wp-mcp-opd",
+  "version": "1.0.0",
+  "description": "Redaksi website humas pemerintah daerah lewat WP-MCP: drafter berita, balasan komentar, halaman, dan Direktori Redaksi dengan alur operator-ai → admin-web → pimpinan.",
+  "author": {
+    "name": "Syamsuddin Ideris",
+    "email": "syamsuddin.ideris@gmail.com"
+  },
+  "homepage": "https://github.com/Syamsuddin/smart-humas",
+  "license": "Proprietary",
+  "keywords": ["wordpress", "humas", "pemerintah daerah", "mcp", "berita"]
+}

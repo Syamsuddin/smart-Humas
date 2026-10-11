@@ -1,0 +1,4 @@
+# /var/lib/wp-mcp/.ssh/authorized_keys — satu baris per orang per perangkat.
+# 'restrict' mematikan port forwarding, agent, X11, dan pty; 'command=' memaksa aktor.
+command="/opt/wp-mcp/bin/wp-mcp-launch --actor admin1",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... admin1@laptop-humas
+command="/opt/wp-mcp/bin/wp-mcp-launch --actor pimpinan1",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... pimpinan1@laptop

@@ -1,0 +1,44 @@
+# Perintah WP-CLI yang boleh dijalankan WP-MCP. Perintah di luar daftar ditolak.
+# "match" dicocokkan dari awal argumen. "level" mengikuti tingkat risiko di dosir (0, 1, 2b, 3).
+# Salin ke /etc/wp-mcp/cli_whitelist.yaml untuk menambah adaptor plugin baru.
+commands:
+  # --- baca ---------------------------------------------------------------
+  - {match: [core, version], level: "0"}
+  - {match: [core, verify-checksums], level: "0"}
+  - {match: [core, check-update], level: "0"}
+  - {match: [plugin, list], level: "0"}
+  - {match: [plugin, status], level: "0"}
+  - {match: [theme, list], level: "0"}
+  - {match: [theme, status], level: "0"}
+  - {match: [option, get, permalink_structure], level: "0"}
+  - {match: [option, get, blogname], level: "0"}
+  - {match: [option, get, siteurl], level: "0"}
+  - {match: [cache, type], level: "0"}
+  - {match: [redis, status], level: "0"}
+  - {match: [cron, event, list], level: "0"}
+  # --- tulis aman ---------------------------------------------------------
+  # (db export sengaja TIDAK ada: bisa menulis dump basis data ke folder publik)
+  - {match: [transient, delete, --expired], level: "1"}
+  # --- terlihat publik: bersihkan cache (adaptor) -------------------------
+  - {match: [cache, flush], level: "2b"}
+  - {match: [rewrite, flush], level: "2b"}
+  - {match: [litespeed-purge, all], level: "2b"}
+  - {match: [litespeed-purge, url], level: "2b"}
+  - {match: [w3-total-cache, flush, all], level: "2b"}
+  - {match: [super-cache, flush], level: "2b"}
+  - {match: [fastest-cache, clear, all], level: "2b"}
+  - {match: [autoptimize, clear], level: "2b"}
+  - {match: [sg, purge], level: "2b"}
+  - {match: [breeze, purge], level: "2b"}
+  - {match: [nginx-helper, purge-all], level: "2b"}
+  - {match: [wp-optimize, cache, purge], level: "2b"}
+  # --- sistem ---------------------------------------------------------------
+  - {match: [plugin, update], level: "3"}
+  - {match: [theme, update], level: "3"}
+  - {match: [core, update], level: "3"}
+  - {match: [theme, activate], level: "3"}
+  # (search-replace sengaja TIDAK ada: opsi --export bisa menulis berkas di mana saja; tambahkan hanya bila
+  #  fitur staging Fase 3 sudah memakai daftar argumen yang dipatok)
+
+# Argumen yang selalu ditolak di posisi mana pun.
+forbidden_args: ["eval", "eval-file", "shell", "--exec", "--require", "--allow-root", "--ssh", "--http", "--url", "--user"]

@@ -1,0 +1,30 @@
+# Pola data pribadi yang diperiksa WP-MCP sebelum menulis ke WordPress.
+# Salin ke /etc/wp-mcp/pii_patterns.yaml untuk menyesuaikan; perubahan berlaku tanpa deploy ulang.
+patterns:
+  nik:
+    label: "NIK / Nomor KK"
+    regex: '(?<![\d])\d{16}(?![\d])'
+    validator: nik
+  phone_mobile:
+    label: "Nomor HP"
+    regex: '(?<![\d+])(?:\+62|62|0)8[1-9](?:[\s.-]?\d){7,11}(?![\d])'
+  email:
+    label: "Alamat email"
+    regex: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+    allow_suffixes: [".go.id"]
+  npwp:
+    label: "NPWP"
+    regex: '\b\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}\b'
+  bank_account:
+    label: "Nomor rekening"
+    regex: '(?i)\brek(?:ening)?\.?\s*(?:no\.?|nomor)?\s*:?\s*(\d(?:[\s-]?\d){8,19})'
+
+# Kata kunci hasil OCR yang menandakan gambar memuat dokumen identitas.
+ocr_keywords:
+  - "KARTU TANDA PENDUDUK"
+  - "KARTU KELUARGA"
+  - "NIK"
+  - "TEMPAT/TGL LAHIR"
+  - "GOL. DARAH"
+  - "NPWP"
+  - "BERLAKU HINGGA"

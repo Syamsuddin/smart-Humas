@@ -1,0 +1,5 @@
+#!/opt/wp-mcp/venv/bin/python -I
+# Pembungkus WP-CLI milik root (lihat wp_mcp/wp_safe.py). Dipasang di /opt/wp-mcp/bin/wp-safe, mode 755, milik root.
+from wp_mcp.wp_safe import main
+
+main()

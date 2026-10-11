@@ -1,0 +1,52 @@
+# /etc/wp-mcp/config.yaml — konfigurasi satu situs humas.
+# Rahasia (password, token) TIDAK ditulis di sini, tetapi di /etc/wp-mcp/secrets.env (mode 600).
+
+site:
+  url: "https://humas.contoh.go.id"   # URL publik situs
+  rest_base: ""                        # kosong = sama dengan url. Pastikan domain → 127.0.0.1 di /etc/hosts
+  rest_prefix: "/wp-json"              # situs tanpa permalink cantik: "/?rest_route="
+  host_header: ""                      # isi bila rest_base memakai IP lokal
+  verify_tls: true
+  wp_path: "/var/www/html"
+  wp_cli: "/usr/local/bin/wp"
+  wp_cli_sudo_user: "www-data"         # wpmcp menjalankan wp sebagai pemilik berkas WordPress (lihat sudoers)
+  error_logs: ["/var/log/nginx/error.log"]
+
+state_dir: "/var/lib/wp-mcp"
+log_dir: "/var/log/wp-mcp"
+
+media:
+  featured: {width: 1200, height: 675, quality: 82, max_kb: 300}
+  inline:   {width: 1024, quality: 80, max_kb: 250}
+  gallery:  {width: 800,  quality: 78, max_kb: 200}
+  social:   {width: 1080, height: 1080, quality: 85, max_kb: 400}
+
+privacy:
+  pii_scan: true        # periksa NIK, HP, email, NPWP, rekening sebelum menulis
+  mask_commenter: true  # email/IP komentator di-hash sebelum keluar dari VPS
+  ocr_media: true       # OCR lokal pada foto untuk mendeteksi dokumen identitas
+
+limits:
+  writes_per_10min: 30
+  pending_action_minutes: 15
+  otp_minutes: 5
+  leader_reminder_hours: 24
+  delegation_max_days: 14
+  content_max_kb: 200
+  proposal_ttl_days: 14
+
+workflow:
+  require_review_before_publish: true
+
+reply:
+  signature: "Admin Website"   # nama yang tampil pada balasan komentar
+
+notify:
+  telegram:
+    enabled: false             # true + WPMCP_TELEGRAM_TOKEN di secrets.env
+
+approvals:
+  wp_admin: true               # halaman Persetujuan WP-MCP di wp-admin (plugin bridge ≥1.1)
+
+otp:
+  channel: "telegram"          # telegram | none (none = aksi level 3 tanpa kode; tidak disarankan)

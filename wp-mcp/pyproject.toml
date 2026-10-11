@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wp-mcp"
+version = "1.0.0"
+description = "Lapisan MCP WordPress untuk website humas pemerintah daerah: operator-ai, admin-web, pimpinan."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary - Syamsuddin Ideris" }
+authors = [{ name = "Syamsuddin Ideris", email = "syamsuddin.ideris@gmail.com" }]
+dependencies = [
+  "mcp>=2.2,<3",
+  "pydantic>=2.6",
+  "PyYAML>=6",
+  "markdown-it-py>=3",
+  "Pillow>=10",
+]
+
+[project.optional-dependencies]
+db = ["PyMySQL>=1.1"]
+faces = ["opencv-python-headless>=4.8"]
+dev = ["pytest>=8", "PyMySQL>=1.1"]
+
+[project.scripts]
+wp-mcp = "wp_mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["wp_mcp*"]
+
+[tool.setuptools.package-data]
+wp_mcp = ["data/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

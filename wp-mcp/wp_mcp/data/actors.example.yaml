@@ -1,0 +1,16 @@
+# /etc/wp-mcp/actors.yaml — tiga peran: operator-ai, admin-web, pimpinan.
+# operator-ai selalu ada otomatis; tidak perlu ditulis.
+# id dipakai di authorized_keys: command="/opt/wp-mcp/bin/wp-mcp-launch --actor <id>"
+actors:
+  - id: admin1
+    name: "Nama Admin Web"
+    role: admin-web
+    technical_admin: false     # true = boleh aksi sistem level 3 (ditunjuk pimpinan)
+    telegram_user_id: null     # untuk kode persetujuan dan notifikasi
+    wp_user: "login-wordpress-admin"   # untuk tombol Setujui di wp-admin → Persetujuan WP-MCP
+
+  - id: pimpinan1
+    name: "Nama Pimpinan"
+    role: pimpinan
+    telegram_user_id: null
+    wp_user: "login-wordpress-pimpinan"
