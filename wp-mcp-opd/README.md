@@ -19,8 +19,9 @@ Empat skill redaksi humas di atas server WP-MCP:
    export WPMCP_SSH_TARGET=wpmcp@humas.contoh.go.id
    ```
 4. Pasang plugin dari marketplace repo ini (butuh akses baca ke repo):
-   ```
-   /plugin install wp-mcp-opd --marketplace Syamsuddin/smart-humas
+   ```bash
+   claude plugin marketplace add Syamsuddin/smart-Humas
+   claude plugin install wp-mcp-opd@smart-humas
    ```
    atau, untuk uji dari salinan lokal: `claude --plugin-dir ./wp-mcp-opd`.
 5. **Wajib**: salin aturan izin ke proyek kerja Anda agar Claude Code selalu bertanya sebelum

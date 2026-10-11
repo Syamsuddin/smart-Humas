@@ -213,18 +213,13 @@ sendiri atau klik di wp-admin, tidak ada yang terbit. Mencoba menebak kode lima 
 
 ## Pasang (ringkas)
 
-Di VPS Ubuntu tempat WordPress berjalan:
-
 ```bash
-git clone https://github.com/Syamsuddin/smart-humas && cd smart-humas
+git clone https://github.com/Syamsuddin/smart-Humas && cd smart-Humas
 sudo ./deploy/install.sh --wp-path /var/www/html --site-url https://humas.contoh.go.id
-sudo nano /etc/wp-mcp/actors.yaml          # admin-web & pimpinan, telegram_user_id, wp_user
-sudo nano /var/lib/wp-mcp/.ssh/authorized_keys   # satu baris per orang, lihat deploy/authorized_keys.example
-sudo -u wpmcp WPMCP_CONFIG_DIR=/etc/wp-mcp /opt/wp-mcp/venv/bin/wp-mcp check
 ```
 
-Di laptop admin/pimpinan: lihat [`wp-mcp-opd/README.md`](wp-mcp-opd/README.md) (`WPMCP_SSH_TARGET`, pasang
-plugin dari marketplace repo ini, salin aturan izin), lalu jalankan `/siapkan-direktori`.
+Langkah lengkap, dari VPS sampai berita pertama, ada di [Petunjuk instalasi lengkap](#petunjuk-instalasi-lengkap)
+di akhir dokumen ini.
 
 ## Model keamanan (inti)
 
@@ -258,5 +253,250 @@ WordPress sungguhan; lakukan di staging sebelum produksi (lihat bagian *Status* 
 Fase 0–1 (fondasi, alur konten tiga peran, Direktori, Memori Redaksi, komentar, media) selesai dan teruji di
 lingkungan tiruan. Belum: gateway Telegram dengan tombol, `wp-mcp-voice-api` + aplikasi mWPAdmin, audit situs
 massal, tema-sebagai-kode (Fase 2–3 dosir).
+
+## Petunjuk instalasi lengkap
+
+Instalasi terdiri atas dua sisi: **server** (sekali, oleh admin teknis yang punya akses root) dan **laptop**
+(sekali per orang: admin-web dan pimpinan). Perkiraan waktu: 30–45 menit untuk server, 10 menit per laptop,
+ditambah waktu wawancara Direktori.
+
+### A. Prasyarat
+
+| Kebutuhan | Keterangan |
+|---|---|
+| VPS | Ubuntu 22.04 atau 24.04, akses `sudo`, WordPress sudah berjalan di server yang **sama** |
+| WordPress | 6.x dengan tema blok; HTTPS aktif (application password WordPress mensyaratkan HTTPS) |
+| Akses keluar | `apt`, `pypi.org`, dan `raw.githubusercontent.com` (untuk WP-CLI bila belum ada) |
+| SSH | Port SSH VPS bisa dijangkau dari laptop admin dan pimpinan |
+| Laptop | Claude Code terpasang dan login; klien OpenSSH (bawaan macOS/Linux, Windows 10+) |
+| Telegram | Opsional tetapi **sangat disarankan**: satu bot dari @BotFather untuk notifikasi dan kode persetujuan |
+
+Siapkan juga daftar orang yang akan memakai: nama, peran (`admin-web` atau `pimpinan`), login WordPress
+masing-masing, dan ID Telegram.
+
+### B. Pasang di server
+
+**1. Ambil kode dan jalankan pemasang**
+
+```bash
+cd /opt && sudo git clone https://github.com/Syamsuddin/smart-Humas smart-humas-src
+cd smart-humas-src
+sudo ./deploy/install.sh --wp-path /var/www/html --site-url https://humas.contoh.go.id
+```
+
+Opsi tambahan:
+
+| Opsi | Kapan dipakai |
+|---|---|
+| `--wp-owner nginx` | pemilik berkas WordPress bukan `www-data` |
+| `--with-faces` | ingin crop foto otomatis mengikuti wajah (memasang OpenCV, ±60 MB) |
+| `--skip-hosts` | Anda mengatur sendiri agar domain situs mengarah ke `127.0.0.1` dari server (lihat *Pemecahan masalah*) |
+
+Pemasang bersifat idempoten (aman diulang) dan **tidak menimpa** konfigurasi yang sudah ada. Yang dikerjakan:
+
+1. memasang `python3-venv`, `tesseract-ocr` + bahasa Indonesia, dan WP-CLI bila belum ada;
+2. membuat user sistem `wpmcp` dan folder `/opt/wp-mcp`, `/etc/wp-mcp`, `/var/lib/wp-mcp`, `/var/log/wp-mcp`;
+3. membuat virtualenv dan memasang paket `wp-mcp`;
+4. menyalin dan mengaktifkan plugin `wp-mcp-bridge`, membuat akun WordPress `editor-ai` (peran Editor AI, bukan Administrator) beserta application password-nya;
+5. menulis `secrets.env`, `config.yaml`, `actors.yaml`, `direktori-redaksi.md`, dan kunci bridge (`WPMCP_BRIDGE_KEY` juga ditulis ke `wp-config.php`);
+6. sudoers: `wpmcp` hanya boleh menjalankan `/opt/wp-mcp/bin/wp-safe`;
+7. `/etc/hosts`: domain situs diarahkan ke `127.0.0.1` agar akun AI selalu datang dari loopback;
+8. logrotate untuk log audit.
+
+**2. Daftarkan para aktor**
+
+```bash
+sudo nano /etc/wp-mcp/actors.yaml
+```
+
+```yaml
+actors:
+  - id: admin1                     # dipakai di authorized_keys
+    name: "Rina Kurniasih"
+    role: admin-web
+    technical_admin: false         # true hanya untuk admin yang ditunjuk pimpinan (aksi sistem level 3)
+    telegram_user_id: 123456789    # angka, bukan @username
+    wp_user: "rina"                # login WordPress orang ini, untuk tombol Setujui di wp-admin
+
+  - id: pimpinan1
+    name: "Kepala Dinas Kominfo"
+    role: pimpinan
+    telegram_user_id: 987654321
+    wp_user: "kadis.kominfo"
+```
+
+`operator-ai` (Claude) selalu ada otomatis dan tidak ditulis di sini. Login WordPress di `wp_user` harus milik
+orang itu sendiri, bukan akun bersama.
+
+**3. Hubungkan Telegram** (lewati bila belum siap; persetujuan tetap bisa lewat wp-admin, kecuali aksi level 3)
+
+1. Buat bot lewat @BotFather, salin token-nya.
+2. Isi `WPMCP_TELEGRAM_TOKEN=` di `/etc/wp-mcp/secrets.env`.
+3. Ubah `notify.telegram.enabled: true` di `/etc/wp-mcp/config.yaml`.
+4. Setiap aktor mengirim `/start` ke bot itu (bot tidak bisa memulai percakapan), lalu mencari ID
+   Telegram-nya (mis. lewat @userinfobot) dan menyerahkannya untuk diisi di `telegram_user_id`.
+
+**4. Daftarkan kunci SSH setiap orang**
+
+Setiap orang membuat kunci di laptopnya sendiri (langkah C.1) dan mengirim **kunci publiknya** (`.pub`).
+Admin server menambahkannya, satu baris per orang per perangkat:
+
+```bash
+sudo nano /var/lib/wp-mcp/.ssh/authorized_keys
+```
+
+```text
+command="/opt/wp-mcp/bin/wp-mcp-launch --actor admin1",restrict ssh-ed25519 AAAAC3Nz... rina@laptop-humas
+command="/opt/wp-mcp/bin/wp-mcp-launch --actor pimpinan1",restrict ssh-ed25519 AAAAC3Nz... kadis@laptop
+```
+
+Kunci menentukan aktor: siapa pun yang memakai kunci Rina akan dianggap `admin1`. Berkas ini milik root,
+sehingga proses `wpmcp` tidak bisa menambah aktor sendiri. Bila `sshd_config` memakai `AllowUsers` atau
+`AllowGroups`, tambahkan `wpmcp` lalu `sudo systemctl reload ssh`.
+
+**5. (Opsional) Akun MySQL baca-saja** untuk fitur audit konten:
+
+```sql
+CREATE USER 'wpmcp_ro'@'localhost' IDENTIFIED BY 'sandi-kuat';
+GRANT SELECT ON wordpress.* TO 'wpmcp_ro'@'localhost';
+```
+
+Lalu isi `WPMCP_DB_*` di `secrets.env`.
+
+**6. Periksa**
+
+```bash
+sudo -u wpmcp WPMCP_CONFIG_DIR=/etc/wp-mcp /opt/wp-mcp/venv/bin/wp-mcp check
+```
+
+| Butir | Harus | Bila gagal |
+|---|---|---|
+| `wp_cli` | `ok: true` | periksa `--wp-path`, `--wp-owner`, dan `/etc/sudoers.d/wp-mcp` |
+| `rest_editor_ai` | `ok: true` | lihat `hints`; biasanya plugin keamanan memblokir REST atau application password |
+| `bridge_plugin` | `ok: true` | aktifkan *WP-MCP Bridge* di wp-admin → Plugins |
+| `telegram` | `ok: true` | token dan `notify.telegram.enabled` (boleh `false` bila sengaja belum dipakai) |
+| `directory` | `ok: false` pada instalasi baru | wajar; diisi di langkah D |
+
+Laporan juga menyebut plugin cache dan plugin keamanan yang terdeteksi beserta penyesuaian yang perlu dibuat.
+
+**7. Uji di wp-admin**: login sebagai pimpinan → menu **Persetujuan WP-MCP** harus tampil (masih kosong).
+Login sebagai `editor-ai` di wp-admin harus **ditolak**; itu tanda pengaman bekerja.
+
+### C. Pasang di laptop (setiap admin-web dan pimpinan)
+
+**1. Buat kunci SSH khusus WP-MCP** dan kirim `.pub`-nya ke admin server (langkah B.4):
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/wpmcp -C "rina@laptop-humas"
+cat ~/.ssh/wpmcp.pub
+```
+
+**2. Atur SSH** di `~/.ssh/config`:
+
+```text
+Host wpmcp-humas
+    HostName humas.contoh.go.id      # atau IP VPS
+    Port 22
+    User wpmcp
+    IdentityFile ~/.ssh/wpmcp
+    IdentitiesOnly yes
+```
+
+Uji (setelah admin server menambahkan kunci Anda):
+
+```bash
+ssh -T wpmcp-humas < /dev/null
+```
+
+Perintah harus diam menunggu (server MCP sedang berjalan); tekan Ctrl+C. Pesan `Permission denied` berarti
+kunci belum terdaftar atau `AllowUsers` belum memuat `wpmcp`.
+
+**3. Set variabel lingkungan** di `~/.bashrc` atau `~/.zshrc` (Windows: *Environment Variables* pengguna), lalu buka terminal baru:
+
+```bash
+export WPMCP_SSH_TARGET=wpmcp-humas
+```
+
+**4. Pasang plugin Claude Code**:
+
+```bash
+claude plugin marketplace add Syamsuddin/smart-Humas
+claude plugin install wp-mcp-opd@smart-humas
+```
+
+**5. Wajib: salin aturan izin** ke folder kerja redaksi, agar Claude Code selalu bertanya sebelum mengajukan,
+menerbitkan, mengirim balasan, atau mengubah Direktori:
+
+```bash
+mkdir -p ~/redaksi/.claude
+curl -fsSL https://raw.githubusercontent.com/Syamsuddin/smart-Humas/main/wp-mcp-opd/templates/claude-settings.json \
+  -o ~/redaksi/.claude/settings.json
+cd ~/redaksi && claude
+```
+
+Plugin tidak bisa membawa aturan izin sendiri. Aturan ini lapis pertama; aksi tertunda dan persetujuan di
+luar percakapan di server adalah lapis kedua yang tetap berlaku walau lapis pertama terlewat.
+
+**6. Periksa sambungan**: di Claude Code ketik `/mcp`. Server `wp-mcp` harus berstatus tersambung.
+
+### D. Isi Direktori Redaksi (sekali, oleh admin-web)
+
+Tanpa Direktori, setiap nama pejabat akan ditandai `UNVERIFIED_NAME` dan berita tidak bisa diajukan.
+
+- **Cara cepat (disarankan):** di Claude Code jalankan `/siapkan-direktori`, lalu tempelkan tabel pejabat
+  (ekspor SIMPEG/Excel), foto bagan struktur, atau PDF Perbup SOTK. Claude mengulang balik isinya sebagai
+  tabel; setelah Anda membalas **sah**, satu persetujuan (kode Telegram atau wp-admin) menyimpan semuanya.
+- **Lewat berkas di server:** isi templat [`docs/direktori-redaksi.md`](docs/direktori-redaksi.md), simpan di
+  `/etc/wp-mcp/`, lalu impor dari shell server (pintu manusia):
+
+  ```bash
+  sudo -u wpmcp WPMCP_CONFIG_DIR=/etc/wp-mcp /opt/wp-mcp/venv/bin/wp-mcp \
+    directory-import /etc/wp-mcp/direktori-redaksi.md --actor admin1
+  ```
+
+Ulangi `wp-mcp check` sampai butir `directory` menjadi `ok: true` (`lengkap-wajib`).
+
+### E. Uji coba pertama
+
+1. Admin-web: `/berita` dengan satu foto dan caption kegiatan sungguhan → draft muncul di wp-admin sebagai *Draft*.
+2. Admin-web: "ajukan ke pimpinan" → kode masuk ke Telegram admin → ketik kode → pimpinan menerima notifikasi.
+3. Pimpinan: "setujui dan terbitkan" → setujui lewat kode Telegram atau wp-admin → berita tayang.
+4. Periksa log audit di server: `sudo -u wpmcp WPMCP_CONFIG_DIR=/etc/wp-mcp /opt/wp-mcp/venv/bin/wp-mcp audit-tail -n 20`.
+
+Lakukan uji ini di **staging** lebih dulu bila tersedia.
+
+### F. Memperbarui
+
+```bash
+cd /opt/smart-humas-src && sudo git pull
+sudo ./deploy/install.sh --wp-path /var/www/html --site-url https://humas.contoh.go.id
+```
+
+Konfigurasi di `/etc/wp-mcp`, Direktori, memori, dan log audit tidak tersentuh. Di laptop:
+`claude plugin marketplace update smart-humas`.
+
+### G. Pemecahan masalah
+
+| Gejala | Penyebab umum | Jalan keluar |
+|---|---|---|
+| `rest_editor_ai` gagal, 401 | plugin keamanan (Wordfence, iThemes/Solid, dsb.) mematikan application password atau REST untuk non-admin | izinkan application password untuk peran Editor AI, atau kecualikan `/wp-json/wp/v2/` dan `/wp-json/wpmcp/v1/` dari loopback |
+| `rest_editor_ai` gagal, galat TLS | situs di belakang Cloudflare/proxy sehingga sertifikat hanya ada di proxy | pasang sertifikat di web server lokal, atau pakai `--skip-hosts` dan arahkan `site.url` ke alamat lokal yang ber-HTTPS |
+| Akun AI ditolak "bukan dari server" | reverse proxy di server yang sama mengubah IP asal | pastikan `WPMCP_BRIDGE_KEY` ada di `wp-config.php` dan `secrets.env` (pemasang mengisinya); header `X-WPMCP-Key` membuktikan asal |
+| Berita tayang tetapi beranda tidak berubah | plugin cache tidak dikenali | jalankan `wp-mcp check` untuk melihat adapter cache; bersihkan manual sekali lalu laporkan nama plugin cache-nya |
+| Kode Telegram tidak datang | aktor belum `/start` ke bot, atau `telegram_user_id` salah | kirim `/start`, periksa ID angka; sementara setujui lewat wp-admin |
+| Tombol Setujui di wp-admin tidak tampil untuk pimpinan | `wp_user` di `actors.yaml` tidak sama dengan login WordPress | samakan; peran penyetuju diperiksa ulang dari `actors.yaml` |
+| `/mcp` di Claude Code: gagal tersambung | `WPMCP_SSH_TARGET` belum terbaca, atau SSH meminta sandi | buka terminal baru; uji `ssh -T $WPMCP_SSH_TARGET < /dev/null`; pastikan memakai kunci, bukan sandi |
+
+### H. Mencopot
+
+```bash
+sudo -u www-data wp --path=/var/www/html plugin deactivate wp-mcp-bridge
+sudo -u www-data wp --path=/var/www/html plugin uninstall wp-mcp-bridge   # menghapus peran Editor AI
+sudo -u www-data wp --path=/var/www/html user delete editor-ai --reassign=1
+sudo rm -rf /opt/wp-mcp /etc/sudoers.d/wp-mcp /etc/logrotate.d/wp-mcp
+sudo sed -i '/# wp-mcp: REST akun AI lewat loopback/d' /etc/hosts
+sudo userdel wpmcp
+# Simpan dulu bila perlu: /etc/wp-mcp (konfigurasi, Direktori), /var/lib/wp-mcp (memori), /var/log/wp-mcp (audit)
+```
 
 Penulis: Syamsuddin Ideris (syamsuddin.ideris@gmail.com).
